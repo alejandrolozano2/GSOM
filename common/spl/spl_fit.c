@@ -25,6 +25,10 @@ __weak ulong board_spl_fit_size_align(ulong size)
 	return size;
 }
 
+#ifdef CONFIG_DUAL_BOOTLOADER
+extern int spl_fit_get_rbindex(const void *fit, int images);
+#endif
+
 /**
  * spl_fit_get_image_node(): By using the matching configuration subnode,
  * retrieve the name of an image, specified by a property name and an index
@@ -292,6 +296,15 @@ int spl_load_simple_fit(struct spl_image_info *spl_image,
 		return -1;
 	}
 
+#ifdef CONFIG_DUAL_BOOTLOADER
+	int rbindex;
+	rbindex = spl_fit_get_rbindex(fit, images);
+	if (rbindex < 0) {
+		printf("Error! Can't get rollback index!\n");
+		return -1;
+	} else
+		spl_image->rbindex = rbindex;
+#endif
 #ifdef CONFIG_SPL_OS_BOOT
 	/* Find OS image first */
 	node = spl_fit_get_image_node(fit, images, FIT_KERNEL_PROP, 0);

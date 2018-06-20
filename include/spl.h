@@ -27,6 +27,9 @@ struct spl_image_info {
 	ulong entry_point;
 	u32 size;
 	u32 flags;
+#ifdef CONFIG_DUAL_BOOTLOADER
+	uint64_t rbindex;
+#endif
 };
 
 /*
