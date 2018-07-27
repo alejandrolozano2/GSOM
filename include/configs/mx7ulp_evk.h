@@ -102,7 +102,7 @@
 #define CONFIG_LOADADDR             0x60800000
 
 #define CONFIG_CMD_MEMTEST
-#define CONFIG_SYS_MEMTEST_END      0x9E000000
+#define CONFIG_SYS_MEMTEST_END      (CONFIG_SYS_MEMTEST_START + (PHYS_SDRAM_SIZE >> 1))
 
 #define CONFIG_MFG_ENV_SETTINGS \
 	"mfgtool_args=setenv bootargs console=${console},${baudrate} " \
