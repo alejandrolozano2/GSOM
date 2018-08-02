@@ -96,7 +96,7 @@ u32 spl_boot_mode(const u32 boot_device)
 }
 #endif
 
-#elif defined(CONFIG_IMX8M)
+#elif defined(CONFIG_IMX8M) || defined(CONFIG_IMX8)
 u32 spl_boot_device(void)
 {
 	switch (get_boot_device()) {
@@ -110,6 +110,9 @@ u32 spl_boot_device(void)
 	case SD3_BOOT:
 	case MMC3_BOOT:
 		return BOOT_DEVICE_MMC2;
+#elif defined(CONFIG_IMX8)
+	case SD2_BOOT:
+		return BOOT_DEVICE_MMC2_2;
 #else
 	case SD2_BOOT:
 	case MMC2_BOOT:
