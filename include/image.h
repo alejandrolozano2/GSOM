@@ -160,6 +160,7 @@ enum {
 	IH_OS_OSE,			/* OSE		*/
 	IH_OS_PLAN9,			/* Plan 9	*/
 	IH_OS_OPENRTOS,		/* OpenRTOS	*/
+	IH_OS_ARM_TRUSTED_FIRMWARE,	/* Arm Trusted Firmware */
 
 	IH_OS_COUNT,
 };

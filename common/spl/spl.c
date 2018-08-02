@@ -90,6 +90,17 @@ void spl_set_header_raw_uboot(struct spl_image_info *spl_image)
 	spl_image->name = "U-Boot";
 }
 
+#if defined(CONFIG_SPL_RAW_IMAGE_ARM_TRUSTED_FIRMWARE)
+void spl_set_header_raw_atf(struct spl_image_info *spl_image)
+{
+	spl_image->size = CONFIG_SYS_MONITOR_LEN;
+	spl_image->entry_point = CONFIG_SYS_ATF_START;
+	spl_image->load_addr = CONFIG_ATF_TEXT_BASE;
+	spl_image->os = IH_OS_ARM_TRUSTED_FIRMWARE;
+	spl_image->name = "Arm Trusted Firmware";
+}
+#endif
+
 int spl_parse_image_header(struct spl_image_info *spl_image,
 			   const struct image_header *header)
 {
@@ -153,7 +164,11 @@ int spl_parse_image_header(struct spl_image_info *spl_image,
 		/* Signature not found - assume u-boot.bin */
 		debug("mkimage signature not found - ih_magic = %x\n",
 			header->ih_magic);
+#if defined(CONFIG_SPL_RAW_IMAGE_ARM_TRUSTED_FIRMWARE)
+		spl_set_header_raw_atf(spl_image);
+#else
 		spl_set_header_raw_uboot(spl_image);
+#endif
 #endif
 	}
 	return 0;
@@ -321,6 +336,11 @@ void board_init_r(gd_t *dummy1, ulong dummy2)
 	case IH_OS_U_BOOT:
 		debug("Jumping to U-Boot\n");
 		break;
+#if defined(CONFIG_SPL_RAW_IMAGE_ARM_TRUSTED_FIRMWARE)
+	case IH_OS_ARM_TRUSTED_FIRMWARE:
+		debug("Jumping to U-Boot via ARM Trusted Firmware\n");
+		break;
+#endif
 #ifdef CONFIG_SPL_OS_BOOT
 	case IH_OS_LINUX:
 		debug("Jumping to Linux\n");

@@ -64,21 +64,23 @@ extern int mmc_load_image_raw_sector_dual_uboot(struct spl_image_info *spl_image
 static int mmc_load_image_raw_sector(struct spl_image_info *spl_image,
 				     struct mmc *mmc, unsigned long sector)
 {
-	unsigned long count;
-	struct image_header *header;
+	struct image_header *header = (struct image_header *)(CONFIG_SYS_TEXT_BASE -
+					 sizeof(struct image_header));
 	int ret = 0;
 
-	header = (struct image_header *)(CONFIG_SYS_TEXT_BASE -
-					 sizeof(struct image_header));
+#if !defined(CONFIG_SPL_RAW_IMAGE_ARM_TRUSTED_FIRMWARE)
+	unsigned long count = 0;
 
 	/* read image header to find the image size & load address */
 	count = blk_dread(mmc_get_blk_desc(mmc), sector, 1, header);
 	debug("hdr read sector %lx, count=%lu\n", sector, count);
 	if (count == 0) {
-		ret = -EIO;
-		goto end;
+#ifdef CONFIG_SPL_LIBCOMMON_SUPPORT
+		puts("mmc_load_image_raw_sector: mmc block read error\n");
+#endif
+		return -1;
 	}
-
+#endif
 	if (IS_ENABLED(CONFIG_SPL_LOAD_FIT) &&
 	    image_get_magic(header) == FDT_MAGIC) {
 		struct spl_load_info load;
@@ -94,7 +96,6 @@ static int mmc_load_image_raw_sector(struct spl_image_info *spl_image,
 		ret = mmc_load_legacy(spl_image, mmc, sector, header);
 	}
 
-end:
 	if (ret) {
 #ifdef CONFIG_SPL_LIBCOMMON_SUPPORT
 		puts("mmc_load_image_raw_sector: mmc block read error\n");
