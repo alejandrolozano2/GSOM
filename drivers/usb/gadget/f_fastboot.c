@@ -356,6 +356,7 @@ int read_from_partition_multi(const char* partition,
 	pte = fastboot_flash_find_ptn(partition);
 	if (!pte) {
 		printf("no %s partition\n", partition);
+		fastboot_flash_dump_ptn();
 		return -1;
 	}
 
@@ -628,6 +629,7 @@ static void process_flash_sf(const char *cmdbuf)
 		ptn = fastboot_flash_find_ptn(cmdbuf);
 		if (ptn == 0) {
 			fastboot_fail("partition does not exist");
+			fastboot_flash_dump_ptn();
 		} else if ((download_bytes > ptn->length * blksz)) {
 			fastboot_fail("image too large for partition");
 		/* TODO : Improve check for yaffs write */
@@ -727,6 +729,7 @@ static void process_flash_sata(const char *cmdbuf)
 		ptn = fastboot_flash_find_ptn(cmdbuf);
 		if (ptn == NULL) {
 			fastboot_fail("partition does not exist");
+			fastboot_flash_dump_ptn();
 		} else if ((download_bytes >
 			   ptn->length * MMC_SATA_BLOCK_SIZE) &&
 				!(ptn->flags & FASTBOOT_PTENTRY_FLAGS_WRITE_ENV)) {
@@ -953,6 +956,7 @@ static void process_flash_mmc(const char *cmdbuf)
 		ptn = fastboot_flash_find_ptn(cmdbuf);
 		if (ptn == NULL) {
 			fastboot_fail("partition does not exist");
+			fastboot_flash_dump_ptn();
 		} else if ((download_bytes >
 			   ptn->length * MMC_SATA_BLOCK_SIZE) &&
 				!(ptn->flags & FASTBOOT_PTENTRY_FLAGS_WRITE_ENV)) {
@@ -1105,6 +1109,7 @@ static void process_erase_mmc(const char *cmdbuf, char *response)
 	ptn = fastboot_flash_find_ptn(cmdbuf);
 	if ((ptn == NULL) || (ptn->flags & FASTBOOT_PTENTRY_FLAGS_UNERASEABLE)) {
 		sprintf(response, "FAILpartition does not exist or uneraseable");
+		fastboot_flash_dump_ptn();
 		return;
 	}
 
@@ -1487,8 +1492,6 @@ struct fastboot_ptentry *fastboot_flash_find_ptn(const char *name)
 		}
 	}
 
-	printf("can't find partition: %s, dump the partition table\n", name);
-	fastboot_flash_dump_ptn();
 	return 0;
 }
 
@@ -1497,6 +1500,7 @@ int fastboot_flash_find_index(const char *name)
 	struct fastboot_ptentry *ptentry = fastboot_flash_find_ptn(name);
 	if (ptentry == NULL) {
 		printf("cannot get the partion info for %s\n",name);
+		fastboot_flash_dump_ptn();
 		return -1;
 	}
 	return ptentry->partition_index;
@@ -1697,6 +1701,7 @@ void tee_setup(void)
 	mmc_switch_part(mmc, TEE_HWPARTITION_ID);
 	if (!tee_pte) {
 		printf("boota: cannot find tee partition!\n");
+		fastboot_flash_dump_ptn();
 	}
 
 	if (mmc->block_dev.block_read(dev_desc, tee_pte->start,
@@ -1829,6 +1834,9 @@ static void fastboot_setup_system_boot_args(const char *slot, bool append_root)
 		strcat(bootargs_3rd, " rootwait");
 		setenv("bootargs_3rd", bootargs_3rd);
 #endif
+	} else {
+		printf("Can't find partition: %s\n", system_part_name);
+		fastboot_flash_dump_ptn();
 	}
 }
 #endif
@@ -2313,6 +2321,7 @@ int do_boota(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		pte = fastboot_flash_find_ptn(ptn);
 		if (!pte) {
 			printf("boota: cannot find '%s' partition\n", ptn);
+			fastboot_flash_dump_ptn();
 			goto fail;
 		}
 
@@ -2918,6 +2927,7 @@ static int get_single_var(char *cmd, char *response)
 		fb_part = fastboot_flash_find_ptn(str);
 		if (!fb_part) {
 			strncat(response, "Wrong partition name.", chars_left);
+			fastboot_flash_dump_ptn();
 			return -1;
 		} else {
 			snprintf(response + strlen(response), chars_left,
@@ -2930,6 +2940,7 @@ static int get_single_var(char *cmd, char *response)
 		fb_part = fastboot_flash_find_ptn(str);
 		if (!fb_part) {
 			strncat(response, "Wrong partition name.", chars_left);
+			fastboot_flash_dump_ptn();
 			return -1;
 		} else {
 			strncat(response, fb_part->fstype, chars_left);
